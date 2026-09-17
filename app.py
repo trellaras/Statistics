@@ -37,21 +37,38 @@ st.markdown('<div class="main-header">✈️ Metalstorm Scout — Extended Stats
 st.caption("Πλήρης ανάλυση προφίλ, αεροσκαφών & εξαγωγή δεδομένων σε Excel")
 
 # ---------------------------------------------------------
-# 2. Sidebar - Εισαγωγή Startoken & Οδηγίες
+# 2. Sidebar - Εισαγωγή Startoken & Οδηγίες (PC & Mobile)
 # ---------------------------------------------------------
 with st.sidebar:
     st.header("🔑 Σύνδεση")
-    token_input = st.text_input("Εισάγετε το Startoken σας:", type="password", help="Επικολλήστε το token από το Network Tab")
+    token_input = st.text_input("Εισάγετε το Startoken σας:", type="password", help="Επικολλήστε το token")
     fetch_btn = st.button("🔄 Φόρτωση Στατιστικών", type="primary", use_container_width=True)
     
     st.divider()
     st.markdown("### ❓ Πώς να βρείτε το Token σας")
-    st.markdown("""
-    1. Ανοίξτε το **playmetalstorm.com/stats** στον PC browser.
-    2. Πατήστε **F12** ➔ καρτέλα **Network**.
-    3. Βρείτε το αίτημα **`my`**.
-    4. Αντιγράψτε την τιμή του **`Authorization`** (μετά το `startoken `).
-    """)
+    
+    tab_pc, tab_mobile = st.tabs(["💻 Υπολογιστής", "📱 Κινητό"])
+    
+    with tab_pc:
+        st.markdown("""
+        1. Ανοίξτε το **playmetalstorm.com/stats** στον Chrome/Edge browser.
+        2. Πατήστε **F12** ➔ καρτέλα **Network** (Δίκτυο).
+        3. Επιλέξτε το φίλτρο **Fetch/XHR**.
+        4. Βρείτε το αίτημα **`my`**.
+        5. Στο **Headers ➔ Authorization**, αντιγράψτε το κείμενο μετά το `startoken `.
+        """)
+        
+    with tab_mobile:
+        st.markdown("""
+        **Android (Kiwi Browser):**
+        1. Κατεβάστε το **Kiwi Browser** από το Play Store.
+        2. Ανοίξτε το **playmetalstorm.com/stats**.
+        3. Πατήστε τις 3 τελείες ➔ **Developer Tools ➔ Network**.
+        4. Βρείτε το `my` και αντιγράψτε το token.
+
+        **iPhone (iOS):**
+        * Χρησιμοποιήστε μια εφαρμογή όπως το **Web Inspector** από το App Store για να ανοίξετε το site και να δείτε τα Network Headers.
+        """)
 
 # ---------------------------------------------------------
 # 3. Συνάρτηση Ανάκτησης Δεδομένων
@@ -118,8 +135,8 @@ if 'raw_data' in st.session_state:
     peak_trophies = player_data.get("highestTotalVehicleRankingPoints", 0)
     player_xp = player_data.get("playerXp", 0)
     hangar_points = player_data.get("cachedHangerPointsSum", 0)
-    equipped_plane = player_data.get("equippedVehicleConfig", "-").replace("aircraft:", "").replace("-v2", "").replace("-v3", "").title()
-    pilot_icon = player_data.get("pilotIcon", "-")
+    equipped_plane_raw = player_data.get("equippedVehicleConfig", "-")
+    equipped_plane = equipped_plane_raw.replace("aircraft:", "").replace("-v2", "").replace("-v3", "").title()
     pilot_banner = player_data.get("pilotBanner", "-")
     
     # Επεξεργασία Αεροσκαφών & Career Counters
@@ -130,20 +147,25 @@ if 'raw_data' in st.session_state:
     total_mvps = 0
     total_deaths = 0
     total_score = 0
-    total_obj_damage = 0
     planes_list = []
     
     for plane_id, stats in career_counters.items():
-        clean_name = plane_id.replace("aircraft:", "").replace("-v2", "").replace("-v3", "").replace("-", " ").title()
+        # Εξαγωγή ονόματος & επιπέδου/έκδοσης αεροσκάφους (π.χ. mig21-v2 -> Version 2 / Mk II)
+        level_str = "Mk I"
+        if "-v2" in plane_id:
+            level_str = "Mk II"
+        elif "-v3" in plane_id:
+            level_str = "Mk III"
+        elif "-v4" in plane_id:
+            level_str = "Mk IV"
+            
+        clean_name = plane_id.replace("aircraft:", "").replace("-v2", "").replace("-v3", "").replace("-v4", "").replace("-", " ").title()
         
         matches = stats.get("pvpMatchesPlayed", 0)
         wins = stats.get("pvpMatchesWon", 0)
         deaths = stats.get("pvpDeaths", 0)
         score = stats.get("pvpScore", 0)
         mvps = stats.get("pvpMvpCount", 0)
-        damage_obj = stats.get("pvpDamageToObjectives", 0)
-        loss_streak = stats.get("lossStreak", 0)
-        missions = stats.get("missionsPlays", 0)
         
         win_rate = round((wins / matches) * 100, 1) if matches > 0 else 0.0
         avg_score = round(score / matches, 1) if matches > 0 else 0.0
@@ -153,20 +175,17 @@ if 'raw_data' in st.session_state:
         total_mvps += mvps
         total_deaths += deaths
         total_score += score
-        total_obj_damage += damage_obj
         
         planes_list.append({
             "Αεροσκάφος": clean_name,
+            "Επίπεδο/Έκδοση": level_str,
             "Αγώνες": matches,
             "Νίκες": wins,
             "Win Rate (%)": win_rate,
             "MVPs": mvps,
             "Μέσο Σκορ": avg_score,
             "Συνολικό Σκορ": score,
-            "Θάνατοι": deaths,
-            "Damage σε Στόχους": damage_obj,
-            "Loss Streak": loss_streak,
-            "Αποστολές": missions
+            "Θάνατοι": deaths
         })
     
     overall_win_rate = round((total_pvp_wins / total_pvp_matches) * 100, 1) if total_pvp_matches > 0 else 0.0
@@ -194,8 +213,7 @@ if 'raw_data' in st.session_state:
         "Σύνολο Αγώνων": total_pvp_matches,
         "Σύνολο Νικών": total_pvp_wins,
         "Σύνολο MVPs": total_mvps,
-        "Σύνολο Θανάτων": total_deaths,
-        "Συνολικό Damage Στόχων": total_obj_damage
+        "Σύνολο Θανάτων": total_deaths
     }])
     
     with col_export:
@@ -203,7 +221,7 @@ if 'raw_data' in st.session_state:
         st.download_button(
             label="📥 Εξαγωγή σε Excel (.xlsx)",
             data=excel_data,
-            file_name=f"Metalstorm_Extended_Stats_{player_name}.xlsx",
+            file_name=f"Metalstorm_Stats_{player_name}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             use_container_width=True,
             type="primary"
@@ -237,7 +255,7 @@ if 'raw_data' in st.session_state:
                 text="Win Rate (%)",
                 color="Win Rate (%)",
                 color_continuous_scale="Blues",
-                hover_data=["Αγώνες", "Νίκες", "MVPs"]
+                hover_data=["Επίπεδο/Έκδοση", "Αγώνες", "Νίκες", "MVPs"]
             )
             fig1.update_traces(texttemplate='%{text}%', textposition='outside')
             fig1.update_layout(template="plotly_dark", xaxis_tickangle=-45, height=450)
@@ -253,7 +271,7 @@ if 'raw_data' in st.session_state:
                 text="Μέσο Σκορ",
                 color="Μέσο Σκορ",
                 color_continuous_scale="Viridis",
-                hover_data=["Αγώνες", "Συνολικό Σκορ"]
+                hover_data=["Επίπεδο/Έκδοση", "Αγώνες", "Συνολικό Σκορ"]
             )
             fig2.update_traces(texttemplate='%{text}', textposition='outside')
             fig2.update_layout(template="plotly_dark", xaxis_tickangle=-45, height=450)
