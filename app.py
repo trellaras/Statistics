@@ -136,7 +136,7 @@ if 'raw_data' in st.session_state:
     player_xp = player_data.get("playerXp", 0)
     hangar_points = player_data.get("cachedHangerPointsSum", 0)
     equipped_plane_raw = player_data.get("equippedVehicleConfig", "-")
-    equipped_plane = equipped_plane_raw.replace("aircraft:", "").replace("-v2", "").replace("-v3", "").title()
+    equipped_plane = equipped_plane_raw.replace("aircraft:", "").replace("-v2", "").replace("-v3", "").replace("-v4", "").replace("-", " ").title()
     pilot_banner = player_data.get("pilotBanner", "-")
     
     # Επεξεργασία Αεροσκαφών & Career Counters
@@ -150,15 +150,6 @@ if 'raw_data' in st.session_state:
     planes_list = []
     
     for plane_id, stats in career_counters.items():
-        # Εξαγωγή ονόματος & επιπέδου/έκδοσης αεροσκάφους (π.χ. mig21-v2 -> Version 2 / Mk II)
-        level_str = "Mk I"
-        if "-v2" in plane_id:
-            level_str = "Mk II"
-        elif "-v3" in plane_id:
-            level_str = "Mk III"
-        elif "-v4" in plane_id:
-            level_str = "Mk IV"
-            
         clean_name = plane_id.replace("aircraft:", "").replace("-v2", "").replace("-v3", "").replace("-v4", "").replace("-", " ").title()
         
         matches = stats.get("pvpMatchesPlayed", 0)
@@ -178,7 +169,6 @@ if 'raw_data' in st.session_state:
         
         planes_list.append({
             "Αεροσκάφος": clean_name,
-            "Επίπεδο/Έκδοση": level_str,
             "Αγώνες": matches,
             "Νίκες": wins,
             "Win Rate (%)": win_rate,
@@ -255,7 +245,7 @@ if 'raw_data' in st.session_state:
                 text="Win Rate (%)",
                 color="Win Rate (%)",
                 color_continuous_scale="Blues",
-                hover_data=["Επίπεδο/Έκδοση", "Αγώνες", "Νίκες", "MVPs"]
+                hover_data=["Αγώνες", "Νίκες", "MVPs"]
             )
             fig1.update_traces(texttemplate='%{text}%', textposition='outside')
             fig1.update_layout(template="plotly_dark", xaxis_tickangle=-45, height=450)
@@ -271,7 +261,7 @@ if 'raw_data' in st.session_state:
                 text="Μέσο Σκορ",
                 color="Μέσο Σκορ",
                 color_continuous_scale="Viridis",
-                hover_data=["Επίπεδο/Έκδοση", "Αγώνες", "Συνολικό Σκορ"]
+                hover_data=["Αγώνες", "Συνολικό Σκορ"]
             )
             fig2.update_traces(texttemplate='%{text}', textposition='outside')
             fig2.update_layout(template="plotly_dark", xaxis_tickangle=-45, height=450)
