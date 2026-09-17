@@ -13,7 +13,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom CSS για πιο καθαρό & ευανάγνωστο UI
+# Custom CSS
 st.markdown("""
     <style>
     .stApp {
@@ -21,7 +21,7 @@ st.markdown("""
         color: #f8fafc;
     }
     div[data-testid="stMetricValue"] {
-        font-size: 1.8rem !important;
+        font-size: 1.7rem !important;
         color: #38bdf8 !important;
     }
     .main-header {
@@ -33,8 +33,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="main-header">✈️ Metalstorm Scout — Stats Tracker</div>', unsafe_allow_html=True)
-st.caption("Αναλυτική παρακολούθηση στατιστικών & εξαγωγή δεδομένων σε Excel")
+st.markdown('<div class="main-header">✈️ Metalstorm Scout — Extended Stats</div>', unsafe_allow_html=True)
+st.caption("Πλήρης ανάλυση προφίλ, αεροσκαφών & εξαγωγή δεδομένων σε Excel")
 
 # ---------------------------------------------------------
 # 2. Sidebar - Εισαγωγή Startoken & Οδηγίες
@@ -54,7 +54,7 @@ with st.sidebar:
     """)
 
 # ---------------------------------------------------------
-# 3. Συνάρτηση Ανάκτησης Δεδομένων (API Call)
+# 3. Συνάρτηση Ανάκτησης Δεδομένων
 # ---------------------------------------------------------
 def fetch_user_stats(token):
     url = "https://playmetalstorm.com/stats/users/my"
@@ -102,7 +102,7 @@ if fetch_btn and token_input:
 if 'raw_data' in st.session_state:
     raw = st.session_state['raw_data']
     
-    # Εντοπισμός του playerData στο JSON
+    # Εντοπισμός του playerData
     player_data = {}
     try:
         accounts = raw.get("accounts", {})
@@ -111,20 +111,26 @@ if 'raw_data' in st.session_state:
     except Exception:
         player_data = raw
 
-    # Βασικά Στοιχεία
+    # Βασικά Στοιχεία Προφίλ
     player_name = player_data.get("playerName", "Unknown")
     friend_code = player_data.get("friendCode", "-")
     trophies = player_data.get("cachedTotalVehicleRankingPoints", 0)
     peak_trophies = player_data.get("highestTotalVehicleRankingPoints", 0)
     player_xp = player_data.get("playerXp", 0)
+    hangar_points = player_data.get("cachedHangerPointsSum", 0)
+    equipped_plane = player_data.get("equippedVehicleConfig", "-").replace("aircraft:", "").replace("-v2", "").replace("-v3", "").title()
+    pilot_icon = player_data.get("pilotIcon", "-")
+    pilot_banner = player_data.get("pilotBanner", "-")
     
-    # Επεξεργασία Αεροσκαφών
+    # Επεξεργασία Αεροσκαφών & Career Counters
     career_counters = player_data.get("careerCounters", {}).get("countersByVehicleConfig", {})
     
     total_pvp_matches = 0
     total_pvp_wins = 0
     total_mvps = 0
     total_deaths = 0
+    total_score = 0
+    total_obj_damage = 0
     planes_list = []
     
     for plane_id, stats in career_counters.items():
@@ -135,13 +141,19 @@ if 'raw_data' in st.session_state:
         deaths = stats.get("pvpDeaths", 0)
         score = stats.get("pvpScore", 0)
         mvps = stats.get("pvpMvpCount", 0)
+        damage_obj = stats.get("pvpDamageToObjectives", 0)
+        loss_streak = stats.get("lossStreak", 0)
+        missions = stats.get("missionsPlays", 0)
         
         win_rate = round((wins / matches) * 100, 1) if matches > 0 else 0.0
+        avg_score = round(score / matches, 1) if matches > 0 else 0.0
         
         total_pvp_matches += matches
         total_pvp_wins += wins
         total_mvps += mvps
         total_deaths += deaths
+        total_score += score
+        total_obj_damage += damage_obj
         
         planes_list.append({
             "Αεροσκάφος": clean_name,
@@ -149,18 +161,23 @@ if 'raw_data' in st.session_state:
             "Νίκες": wins,
             "Win Rate (%)": win_rate,
             "MVPs": mvps,
+            "Μέσο Σκορ": avg_score,
+            "Συνολικό Σκορ": score,
             "Θάνατοι": deaths,
-            "Σκορ": score
+            "Damage σε Στόχους": damage_obj,
+            "Loss Streak": loss_streak,
+            "Αποστολές": missions
         })
     
     overall_win_rate = round((total_pvp_wins / total_pvp_matches) * 100, 1) if total_pvp_matches > 0 else 0.0
+    overall_avg_score = round(total_score / total_pvp_matches, 1) if total_pvp_matches > 0 else 0.0
     
-    # --- HEADER & EXPORT BUTTON ---
+    # --- HEADER & EXPORT ---
     col_title, col_export = st.columns([3, 1])
     with col_title:
         st.subheader(f"👤 Παίκτης: **{player_name}** | Tag: `{friend_code}`")
+        st.caption(f"Εξοπλισμένο Αεροσκάφος: **{equipped_plane}** | Banner: `{pilot_banner}`")
     
-    # Δημιουργία DataFrames για Εξαγωγή
     df_planes = pd.DataFrame(planes_list)
     df_planes_sorted = df_planes.sort_values(by="Αγώνες", ascending=False) if not df_planes.empty else df_planes
     
@@ -170,20 +187,23 @@ if 'raw_data' in st.session_state:
         "Τρόπαια": trophies,
         "Peak Τρόπαια": peak_trophies,
         "Player XP": player_xp,
+        "Hangar Points": hangar_points,
+        "Εξοπλισμένο Αεροσκάφος": equipped_plane,
         "Συνολικό Win Rate (%)": overall_win_rate,
+        "Μέσο Σκορ/Αγώνα": overall_avg_score,
         "Σύνολο Αγώνων": total_pvp_matches,
         "Σύνολο Νικών": total_pvp_wins,
         "Σύνολο MVPs": total_mvps,
-        "Σύνολο Θανάτων": total_deaths
+        "Σύνολο Θανάτων": total_deaths,
+        "Συνολικό Damage Στόχων": total_obj_damage
     }])
     
-    # Κουμπί Κατεβάσματος Excel
     with col_export:
         excel_data = generate_excel(df_profile, df_planes_sorted)
         st.download_button(
             label="📥 Εξαγωγή σε Excel (.xlsx)",
             data=excel_data,
-            file_name=f"Metalstorm_Stats_{player_name}.xlsx",
+            file_name=f"Metalstorm_Extended_Stats_{player_name}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             use_container_width=True,
             type="primary"
@@ -191,35 +211,54 @@ if 'raw_data' in st.session_state:
     
     st.divider()
 
-    # --- TOP CARDS (METRICS) ---
-    c1, c2, c3, c4, c5 = st.columns(5)
+    # --- CARDS (TOP METRICS) ---
+    c1, c2, c3, c4, c5, c6 = st.columns(6)
     c1.metric("Τρόπαια 🏆", f"{trophies:,}")
     c2.metric("Peak Τρόπαια 🔝", f"{peak_trophies:,}")
     c3.metric("Win Rate 🎯", f"{overall_win_rate}%")
-    c4.metric("Αγώνες ⚔️", f"{total_pvp_matches:,}")
-    c5.metric("MVPs 🎖️", f"{total_mvps:,}")
+    c4.metric("Player XP ⭐", f"{player_xp:,}")
+    c5.metric("Hangar Points 🏭", f"{hangar_points:,}")
+    c6.metric("MVPs 🎖️", f"{total_mvps:,}")
     
     st.divider()
 
-    # --- GRAPH & TABLE ---
+    # --- GRAPHICS & TABLES ---
     if not df_planes.empty:
-        # Φιλτράρισμα αεροσκαφών με >= 5 αγώνες για καθαρό γράφημα
         df_filtered = df_planes[df_planes["Αγώνες"] >= 5].sort_values(by="Win Rate (%)", ascending=False)
         
-        st.subheader("📊 Win Rate ανά Μαχητικό (min. 5 αγώνες)")
+        tab1, tab2, tab3 = st.tabs(["📊 Γράφημα Win Rate", "📈 Γράφημα Μέσου Σκορ", "📋 Αναλυτικός Πίνακας"])
         
-        fig = px.bar(
-            df_filtered,
-            x="Αεροσκάφος",
-            y="Win Rate (%)",
-            text="Win Rate (%)",
-            color="Win Rate (%)",
-            color_continuous_scale="Blues",
-            hover_data=["Αγώνες", "Νίκες", "MVPs"]
-        )
-        fig.update_traces(texttemplate='%{text}%', textposition='outside')
-        fig.update_layout(template="plotly_dark", xaxis_tickangle=-45, height=450)
-        st.plotly_chart(fig, use_container_width=True)
-        
-        st.subheader("📋 Αναλυτικά Στατιστικά Αεροσκαφών")
-        st.dataframe(df_planes_sorted, use_container_width=True)
+        with tab1:
+            st.subheader("Win Rate (%) ανά Αεροσκάφος (min. 5 αγώνες)")
+            fig1 = px.bar(
+                df_filtered,
+                x="Αεροσκάφος",
+                y="Win Rate (%)",
+                text="Win Rate (%)",
+                color="Win Rate (%)",
+                color_continuous_scale="Blues",
+                hover_data=["Αγώνες", "Νίκες", "MVPs"]
+            )
+            fig1.update_traces(texttemplate='%{text}%', textposition='outside')
+            fig1.update_layout(template="plotly_dark", xaxis_tickangle=-45, height=450)
+            st.plotly_chart(fig1, use_container_width=True)
+            
+        with tab2:
+            st.subheader("Μέσο Σκορ ανά Αγώνα")
+            df_score_sorted = df_planes[df_planes["Αγώνες"] >= 5].sort_values(by="Μέσο Σκορ", ascending=False)
+            fig2 = px.bar(
+                df_score_sorted,
+                x="Αεροσκάφος",
+                y="Μέσο Σκορ",
+                text="Μέσο Σκορ",
+                color="Μέσο Σκορ",
+                color_continuous_scale="Viridis",
+                hover_data=["Αγώνες", "Συνολικό Σκορ"]
+            )
+            fig2.update_traces(texttemplate='%{text}', textposition='outside')
+            fig2.update_layout(template="plotly_dark", xaxis_tickangle=-45, height=450)
+            st.plotly_chart(fig2, use_container_width=True)
+            
+        with tab3:
+            st.subheader("Πλήρης Πίνακας Στατιστικών Αεροσκαφών")
+            st.dataframe(df_planes_sorted, use_container_width=True)
