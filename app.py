@@ -229,7 +229,7 @@ if 'raw_data' in st.session_state:
         deaths_per_match = round(deaths / matches, 2) if matches > 0 else 0.0
 
         planes_list.append({
-            "Αεροσκάφος": clean_name,
+            "Aircraft": clean_name,
             "Αγώνες": matches,
             "Wins": wins,
             "Win Rate (%)": win_rate,
@@ -307,7 +307,7 @@ if 'raw_data' in st.session_state:
     col_title, col_export = st.columns([3, 1])
     with col_title:
         st.subheader(f"👤 Παίκτης: **{player_name}** | Tag: `{friend_code}`")
-        st.caption(f"Εξοπλισμένο Αεροσκάφος: **{equipped_plane}** | Banner: `{pilot_banner}`")
+        st.caption(f"Εξοπλισμένο Aircraft: **{equipped_plane}** | Banner: `{pilot_banner}`")
     
     with col_export:
         excel_bytes = generate_styled_excel(df_profile_export, df_planes_sorted, df_modes)
@@ -346,10 +346,10 @@ if 'raw_data' in st.session_state:
             sub1, sub2 = st.tabs(["📊 Γράφημα Win Rate", "📈 Μέσο Σκορ ανά Αγώνα"])
             
             with sub1:
-                st.subheader("Win Rate (%) ανά Αεροσκάφος (min. 5 αγώνες)")
+                st.subheader("Win Rate (%) ανά Aircraft (min. 5 αγώνες)")
                 fig1 = px.bar(
                     df_filtered,
-                    x="Αεροσκάφος",
+                    x="Aircraft",
                     y="Win Rate (%)",
                     text="Win Rate (%)",
                     color="Win Rate (%)",
@@ -365,7 +365,7 @@ if 'raw_data' in st.session_state:
                 df_score_sorted = df_planes[df_planes["Αγώνες"] >= 5].sort_values(by="Μέσο Σκορ", ascending=False)
                 fig2 = px.bar(
                     df_score_sorted,
-                    x="Αεροσκάφος",
+                    x="Aircraft",
                     y="Μέσο Σκορ",
                     text="Μέσο Σκορ",
                     color="Μέσο Σκορ",
