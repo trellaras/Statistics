@@ -236,7 +236,7 @@ if 'raw_data' in st.session_state:
             "Deaths": deaths,
             "Deaths/Match": deaths_per_match,
             "MVPs": mvps,
-            "Μέσο Σκορ": avg_score
+            "Avg Score": avg_score
         })
 
     df_planes = pd.DataFrame(planes_list)
@@ -279,7 +279,7 @@ if 'raw_data' in st.session_state:
             "Win Rate (%)": m_wr,
             "MVPs": m_mvps,
             "Deaths": m_deaths,
-            "Μέσο Σκορ": m_avg_score
+            "Avg Score": m_avg_score
         })
         
     df_modes = pd.DataFrame(modes_list).sort_values(by="Matches", ascending=False) if modes_list else pd.DataFrame()
@@ -343,7 +343,7 @@ if 'raw_data' in st.session_state:
         if not df_planes.empty:
             df_filtered = df_planes[df_planes["Matches"] >= 5].sort_values(by="Win Rate (%)", ascending=False)
             
-            sub1, sub2 = st.tabs(["📊 Γράφημα Win Rate", "📈 Μέσο Σκορ ανά Αγώνα"])
+            sub1, sub2 = st.tabs(["📊 Γράφημα Win Rate", "📈 Avg Score ανά Αγώνα"])
             
             with sub1:
                 st.subheader("Win Rate (%) ανά Aircraft (min. 5 Matches)")
@@ -361,14 +361,14 @@ if 'raw_data' in st.session_state:
                 st.plotly_chart(fig1, use_container_width=True)
                 
             with sub2:
-                st.subheader("Μέσο Σκορ ανά Αγώνα")
-                df_score_sorted = df_planes[df_planes["Matches"] >= 5].sort_values(by="Μέσο Σκορ", ascending=False)
+                st.subheader("Avg Score ανά Αγώνα")
+                df_score_sorted = df_planes[df_planes["Matches"] >= 5].sort_values(by="Avg Score", ascending=False)
                 fig2 = px.bar(
                     df_score_sorted,
                     x="Aircraft",
-                    y="Μέσο Σκορ",
-                    text="Μέσο Σκορ",
-                    color="Μέσο Σκορ",
+                    y="Avg Score",
+                    text="Avg Score",
+                    color="Avg Score",
                     color_continuous_scale="Viridis",
                     hover_data=["Matches", "MVPs"]
                 )
