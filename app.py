@@ -119,7 +119,6 @@ if fetch_btn and token_input:
 if 'raw_data' in st.session_state:
     raw = st.session_state['raw_data']
     
-    # Εντοπισμός του playerData
     player_data = {}
     try:
         accounts = raw.get("accounts", {})
@@ -128,7 +127,7 @@ if 'raw_data' in st.session_state:
     except Exception:
         player_data = raw
 
-    # Βασικά Στοιχεία Προφίλ
+    # Profile Attributes
     player_name = player_data.get("playerName", "Unknown")
     friend_code = player_data.get("friendCode", "-")
     trophies = player_data.get("cachedTotalVehicleRankingPoints", 0)
@@ -139,13 +138,14 @@ if 'raw_data' in st.session_state:
     equipped_plane = equipped_plane_raw.replace("aircraft:", "").replace("-v2", "").replace("-v3", "").replace("-v4", "").replace("-", " ").title()
     pilot_banner = player_data.get("pilotBanner", "-")
     
-    # Επεξεργασία Αεροσκαφών & Career Counters
+    # Career Counters
     career_counters = player_data.get("careerCounters", {}).get("countersByVehicleConfig", {})
     
     total_pvp_matches = 0
     total_pvp_wins = 0
     total_mvps = 0
     total_deaths = 0
+    total_kills = 0
     total_score = 0
     planes_list = []
     
@@ -155,16 +155,20 @@ if 'raw_data' in st.session_state:
         matches = stats.get("pvpMatchesPlayed", 0)
         wins = stats.get("pvpMatchesWon", 0)
         deaths = stats.get("pvpDeaths", 0)
+        kills = stats.get("pvpKills", stats.get("pvpKillsCount", 0))
         score = stats.get("pvpScore", 0)
         mvps = stats.get("pvpMvpCount", 0)
         
         win_rate = round((wins / matches) * 100, 1) if matches > 0 else 0.0
         avg_score = round(score / matches, 1) if matches > 0 else 0.0
+        mvp_per_match = mvps / matches if matches > 0 else 0.0
+        death_per_match = deaths / matches if matches > 0 else 0.0
         
         total_pvp_matches += matches
         total_pvp_wins += wins
         total_mvps += mvps
         total_deaths += deaths
+        total_kills += kills
         total_score += score
         
         planes_list.append({
@@ -175,11 +179,16 @@ if 'raw_data' in st.session_state:
             "MVPs": mvps,
             "Μέσο Σκορ": avg_score,
             "Συνολικό Σκορ": score,
-            "Θάνατοι": deaths
+            "Θάνατοι": deaths,
+            "MVP/Match": mvp_per_match,
+            "Death/Match": death_per_match
         })
     
     overall_win_rate = round((total_pvp_wins / total_pvp_matches) * 100, 1) if total_pvp_matches > 0 else 0.0
     overall_avg_score = round(total_score / total_pvp_matches, 1) if total_pvp_matches > 0 else 0.0
+    overall_mvp_m = total_mvps / total_pvp_matches if total_pvp_matches > 0 else 0.0
+    overall_d_m = total_deaths / total_pvp_matches if total_pvp_matches > 0 else 0.0
+    overall_k_m = total_kills / total_pvp_matches if total_pvp_matches > 0 else 0.0
     
     # --- HEADER & EXPORT ---
     col_title, col_export = st.columns([3, 1])
@@ -190,24 +199,62 @@ if 'raw_data' in st.session_state:
     df_planes = pd.DataFrame(planes_list)
     df_planes_sorted = df_planes.sort_values(by="Αγώνες", ascending=False) if not df_planes.empty else df_planes
     
-    df_profile = pd.DataFrame([{
+    # Aggregates for Aircraft Sheet
+    if not df_planes_sorted.empty:
+        summary_row_1 = {
+            "Αεροσκάφος": None, "Αγώνες": "Sum", "Νίκες": "Sum", "Win Rate (%)": "Avg",
+            "MVPs": "Sum", "Μέσο Σκορ": "Avg", "Συνολικό Σκορ": "Sum", "Θάνατοι": "Sum",
+            "MVP/Match": "Avg", "Death/Match": "Avg"
+        }
+        summary_row_2 = {
+            "Αεροσκάφος": None,
+            "Αγώνες": df_planes_sorted["Αγώνες"].sum(),
+            "Νίκες": df_planes_sorted["Νίκες"].sum(),
+            "Win Rate (%)": df_planes_sorted["Win Rate (%)"].mean(),
+            "MVPs": df_planes_sorted["MVPs"].sum(),
+            "Μέσο Σκορ": df_planes_sorted["Μέσο Σκορ"].mean(),
+            "Συνολικό Σκορ": df_planes_sorted["Συνολικό Σκορ"].sum(),
+            "Θάνατοι": df_planes_sorted["Θάνατοι"].sum(),
+            "MVP/Match": df_planes_sorted["MVP/Match"].mean(),
+            "Death/Match": df_planes_sorted["Death/Match"].mean()
+        }
+        df_planes_excel = pd.concat([df_planes_sorted, pd.DataFrame([{}, summary_row_1, summary_row_2])], ignore_index=True)
+    else:
+        df_planes_excel = df_planes_sorted
+
+    # Profile Dataframe structure with extra indicator rows
+    profile_main = {
         "Όνομα Παίκτη": player_name,
         "Friend Code": friend_code,
         "Τρόπαια": trophies,
         "Peak Τρόπαια": peak_trophies,
         "Player XP": player_xp,
         "Hangar Points": hangar_points,
-        "Εξοπλισμένο Αεροσκάφος": equipped_plane,
         "Συνολικό Win Rate (%)": overall_win_rate,
         "Μέσο Σκορ/Αγώνα": overall_avg_score,
         "Σύνολο Αγώνων": total_pvp_matches,
         "Σύνολο Νικών": total_pvp_wins,
         "Σύνολο MVPs": total_mvps,
-        "Σύνολο Θανάτων": total_deaths
-    }])
+        "Σύνολο Θανάτων": total_deaths,
+        "Kills": total_kills
+    }
+    
+    profile_headers = {
+        "Σύνολο MVPs": "MVP/M",
+        "Σύνολο Θανάτων": "D/M",
+        "Kills": "K/M"
+    }
+    
+    profile_averages = {
+        "Σύνολο MVPs": overall_mvp_m,
+        "Σύνολο Θανάτων": overall_d_m,
+        "Kills": overall_k_m
+    }
+    
+    df_profile = pd.DataFrame([profile_main, {}, profile_headers, profile_averages])
     
     with col_export:
-        excel_data = generate_excel(df_profile, df_planes_sorted)
+        excel_data = generate_excel(df_profile, df_planes_excel)
         st.download_button(
             label="📥 Εξαγωγή σε Excel (.xlsx)",
             data=excel_data,
