@@ -123,8 +123,8 @@ def generate_styled_excel(df_profile, df_planes, df_modes):
     )
 
     sheets_data = [
-        ('Προφίλ & Σύνολα', df_profile),
-        ('Στατιστικά Αεροσκαφών', df_planes),
+        ('Profile', df_profile),
+        ('Statistics', df_planes),
         ('Game Modes', df_modes)
     ]
     
