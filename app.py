@@ -113,12 +113,12 @@ def generate_styled_excel(df_profile, df_planes, df_modes):
     
     # Στυλ Επικεφαλίδων & Δεδομένων
     header_fill = PatternFill(start_color="1E3A8A", end_color="1E3A8A", fill_type="solid") # Σκούρο Μπλε
-    header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
-    data_font = Font(name="Calibri", size=10)
+    header_font = Font(name="Calibri", size=13, bold=True, color="FFFFFF")
+    data_font = Font(name="Calibri", size=12)
     
     # Στυλ Γραμμής Totals
     summary_fill = PatternFill(start_color="F1F5F9", end_color="F1F5F9", fill_type="solid") # Ανοιχτό Γκρι/Σλατ
-    summary_font = Font(name="Calibri", size=10, bold=True)
+    summary_font = Font(name="Calibri", size=12, bold=True)
     
     thin_border = Border(
         left=Side(style='thin', color='CBD5E1'),
