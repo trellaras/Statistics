@@ -216,7 +216,7 @@ def generate_styled_excel(df_profile, df_planes, df_modes):
     chart = BarChart()
     chart.type = "col"
     chart.style = 10
-    chart.title = "Αποδοτικότητα (Win Rate %) ανά Game Mode"
+    chart.title = "Win Rate % per Game Mode"
     chart.y_axis.title = "Win Rate (%)"
     chart.x_axis.title = "Game Mode"
     chart.legend = None
@@ -395,8 +395,8 @@ if 'raw_data' in st.session_state:
 
     # --- TOP METRIC CARDS ---
     c1, c2, c3, c4, c5, c6 = st.columns(6)
-    c1.metric("Τρόπαια 🏆", f"{trophies:,}")
-    c2.metric("Peak Τρόπαια 🔝", f"{peak_trophies:,}")
+    c1.metric("Trophies 🏆", f"{trophies:,}")
+    c2.metric("Max Trophies 🔝", f"{peak_trophies:,}")
     c3.metric("Win Rate 🎯", f"{overall_win_rate}%")
     c4.metric("Player XP ⭐", f"{player_xp:,}")
     c5.metric("Hangar Points 🏭", f"{hangar_points:,}")
@@ -405,7 +405,7 @@ if 'raw_data' in st.session_state:
     st.divider()
 
     # --- MAIN TABS ---
-    tab_planes, tab_modes, tab_raw = st.tabs(["✈️ Αεροσκάφη", "🎮 Ανάλυση Game Modes", "📋 Πλήρεις Πίνακες"])
+    tab_planes, tab_modes, tab_raw = st.tabs(["✈️ Aircrafts", "🎮 Game Modes", "📋 Full Tables"])
 
     # ---------------------------------------------------------
     # TAB 1: ΑΕΡΟΣΚΑΦΗ & GRAPHICS
@@ -414,10 +414,10 @@ if 'raw_data' in st.session_state:
         if not df_planes.empty:
             df_filtered = df_planes[df_planes["Matches"] >= 5].sort_values(by="Win Rate (%)", ascending=False)
             
-            sub1, sub2 = st.tabs(["📊 Γράφημα Win Rate", "📈 Avg Score ανά Αγώνα"])
+            sub1, sub2 = st.tabs(["📊 Win Rate graph", "📈 Avg Score per Match"])
             
             with sub1:
-                st.subheader("Win Rate (%) ανά Aircraft (min. 5 Matches)")
+                st.subheader("Win Rate (%) per Aircraft (min. 5 Matches)")
                 fig1 = px.bar(
                     df_filtered,
                     x="Aircraft",
@@ -447,7 +447,7 @@ if 'raw_data' in st.session_state:
                 fig2.update_layout(template="plotly_dark", xaxis_tickangle=-45, height=450)
                 st.plotly_chart(fig2, use_container_width=True)
 
-            st.subheader("📋 Αναλυτικός Πίνακας Στατιστικών Αεροσκαφών")
+            st.subheader("📋 Atrcraft detailed Stats")
             st.dataframe(df_planes_sorted, use_container_width=True)
 
     # ---------------------------------------------------------
@@ -458,7 +458,7 @@ if 'raw_data' in st.session_state:
             col_gm_chart, col_gm_data = st.columns([3, 2])
             
             with col_gm_chart:
-                st.subheader("Αποδοτικότητα (Win Rate %) ανά Game Mode")
+                st.subheader("Win Rate % ανά Game Mode")
                 fig_gm = px.bar(
                     df_modes,
                     x="Game Mode",
@@ -473,7 +473,7 @@ if 'raw_data' in st.session_state:
                 st.plotly_chart(fig_gm, use_container_width=True)
                 
             with col_gm_data:
-                st.subheader("Κατανομή Αγώνων")
+                st.subheader("Overall Matches")
                 fig_pie = px.pie(
                     df_modes,
                     names="Game Mode",
@@ -484,12 +484,12 @@ if 'raw_data' in st.session_state:
                 fig_pie.update_layout(template="plotly_dark", height=400)
                 st.plotly_chart(fig_pie, use_container_width=True)
 
-            st.subheader("📊 Πίνακας Game Modes")
+            st.subheader("📊 Game Modes")
             st.dataframe(df_modes, use_container_width=True)
 
     # ---------------------------------------------------------
     # TAB 3: RAW TABLES & EXPORT PREVIEW
     # ---------------------------------------------------------
     with tab_raw:
-        st.subheader("Προφίλ Παίκτη")
+        st.subheader("Profile")
         st.dataframe(df_profile_export, use_container_width=True)
