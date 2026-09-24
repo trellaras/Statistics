@@ -6,6 +6,7 @@ from io import BytesIO
 import openpyxl
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
+from openpyxl.chart import BarChart, Reference
 
 # ---------------------------------------------------------
 # 1. Ρυθμίσεις Σελίδας & Design
@@ -110,16 +111,27 @@ def generate_styled_excel(df_profile, df_planes, df_modes):
     wb = openpyxl.Workbook()
     wb.remove(wb.active) # Αφαίρεση default sheet
     
-    # Στυλ
+    # Στυλ Επικεφαλίδων & Δεδομένων
     header_fill = PatternFill(start_color="1E3A8A", end_color="1E3A8A", fill_type="solid") # Σκούρο Μπλε
     header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
     data_font = Font(name="Calibri", size=10)
+    
+    # Στυλ Γραμμής Totals
+    summary_fill = PatternFill(start_color="F1F5F9", end_color="F1F5F9", fill_type="solid") # Ανοιχτό Γκρι/Σλατ
+    summary_font = Font(name="Calibri", size=10, bold=True)
     
     thin_border = Border(
         left=Side(style='thin', color='CBD5E1'),
         right=Side(style='thin', color='CBD5E1'),
         top=Side(style='thin', color='CBD5E1'),
         bottom=Side(style='thin', color='CBD5E1')
+    )
+    
+    totals_border = Border(
+        left=Side(style='thin', color='CBD5E1'),
+        right=Side(style='thin', color='CBD5E1'),
+        top=Side(style='thin', color='1E3A8A'),
+        bottom=Side(style='double', color='1E3A8A')
     )
 
     sheets_data = [
@@ -128,8 +140,11 @@ def generate_styled_excel(df_profile, df_planes, df_modes):
         ('Game Modes', df_modes)
     ]
     
+    created_sheets = {}
+    
     for sheet_name, df in sheets_data:
         ws = wb.create_sheet(title=sheet_name)
+        created_sheets[sheet_name] = ws
         
         # Headers
         headers = list(df.columns)
@@ -156,11 +171,67 @@ def generate_styled_excel(df_profile, df_planes, df_modes):
                 elif isinstance(cell.value, int):
                     cell.number_format = '#,##0'
 
+        # --- ΠΡΟΣΘΗΚΗ ΓΡΑΜΜΗΣ TOTALS ΣΤΗΝ ΚΑΡΤΕΛΑ STATISTICS ---
+        if sheet_name == 'Statistics':
+            last_data_row = ws.max_row
+            totals_row_idx = last_data_row + 1
+            
+            # Συναρτήσεις Excel για τη γραμμή Totals
+            totals_formulas = [
+                'Totals',
+                f'=SUM(B2:B{last_data_row})',
+                f'=SUM(C2:C{last_data_row})',
+                f'=AVERAGE(D2:D{last_data_row})',
+                f'=SUM(E2:E{last_data_row})',
+                f'=AVERAGE(F2:F{last_data_row})',
+                f'=SUM(G2:G{last_data_row})',
+                f'=AVERAGE(H2:H{last_data_row})'
+            ]
+            
+            ws.append(totals_formulas)
+            
+            # Μορφοποίηση Γραμμής Totals
+            for col_num in range(1, len(totals_formulas) + 1):
+                cell = ws.cell(row=totals_row_idx, column=col_num)
+                cell.font = summary_font
+                cell.fill = summary_fill
+                cell.border = totals_border
+                
+                # Format αριθμών στις συναρτήσεις
+                if col_num in [4, 6, 8]:  # Win Rate, Deaths/Match, Avg Score
+                    cell.number_format = '0.0'
+                elif col_num in [2, 3, 5, 7]:  # Matches, Wins, Deaths, MVPs
+                    cell.number_format = '#,##0'
+
         # Auto adjust column width
         for col in ws.columns:
             max_len = max(len(str(cell.value or '')) for cell in col)
             col_letter = get_column_letter(col[0].column)
             ws.column_dimensions[col_letter].width = max(max_len + 3, 12)
+
+    # --- ΠΡΟΣΘΗΚΗ ΓΡΑΦΗΜΑΤΟΣ GAME MODES ΣΤΗΝ ΚΑΡΤΕΛΑ STATISTICS ---
+    ws_stats = created_sheets['Statistics']
+    ws_modes = created_sheets['Game Modes']
+    
+    chart = BarChart()
+    chart.type = "col"
+    chart.style = 10
+    chart.title = "Αποδοτικότητα (Win Rate %) ανά Game Mode"
+    chart.y_axis.title = "Win Rate (%)"
+    chart.x_axis.title = "Game Mode"
+    chart.legend = None
+    chart.width = 16
+    chart.height = 11
+    
+    # Αναφορά στα δεδομένα της καρτέλας Game Modes (Στήλη 4: Win Rate %, Στήλη 1: Game Mode)
+    data_ref = Reference(ws_modes, min_col=4, min_row=1, max_row=ws_modes.max_row)
+    cats_ref = Reference(ws_modes, min_col=1, min_row=2, max_row=ws_modes.max_row)
+    
+    chart.add_data(data_ref, titles_from_data=True)
+    chart.set_categories(cats_ref)
+    
+    # Τοποθέτηση του γραφήματος στα δεξιά του πίνακα Statistics (στη θέση J2)
+    ws_stats.add_chart(chart, "J2")
 
     wb.save(output)
     return output.getvalue()
