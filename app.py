@@ -255,11 +255,11 @@ if 'raw_data' in st.session_state:
     for mode_key, mode_stats in game_modes_data.items():
         clean_mode = mode_key.replace("GameModeCategory", "").replace("GameMode", "")
         mode_names_map = {
-            "ControlPoints": "Control Points 🚩",
-            "Deathmatch": "Deathmatch ⚔️",
-            "PriorityTarget": "Priority Target 🎯",
-            "CaptureTheFlag": "Capture The Flag 🚩",
-            "Elimination": "Elimination 💀"
+            "ControlPoints": "Air Superiority",
+            "Deathmatch": "Deathmatch",
+            "PriorityTarget": "Priority Target",
+            "CaptureTheFlag": "Capture The Flag",
+            "Elimination": "Elimination"
         }
         display_mode = mode_names_map.get(clean_mode, clean_mode)
         
