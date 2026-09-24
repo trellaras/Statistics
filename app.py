@@ -288,18 +288,18 @@ if 'raw_data' in st.session_state:
     # C. Δημιουργία Dataframe για Excel Export
     # ---------------------------------------------------------
     profile_export = {
-        "Όνομα Παίκτη": player_name,
+        "Player": player_name,
         "Friend Code": friend_code,
-        "Τρόπαια": trophies,
-        "Peak Τρόπαια": peak_trophies,
+        "Trophies": trophies,
+        "Max Trophies": peak_trophies,
         "Player XP": player_xp,
         "Hangar Points": hangar_points,
-        "Συνολικό Win Rate (%)": overall_win_rate,
-        "Σύνολο Αγώνων": total_pvp_matches,
-        "Σύνολο Νικών": total_pvp_wins,
-        "Σύνολο Θανάτων": total_deaths,
-        "Overall Deaths/Match": overall_d_m,
-        "Σύνολο MVPs": total_mvps
+        "Total Win Rate (%)": overall_win_rate,
+        "Total Matches": total_pvp_matches,
+        "Total Wins": total_pvp_wins,
+        "Deaths": total_deaths,
+        "Deaths/Match": overall_d_m,
+        "Total MVPs": total_mvps
     }
     df_profile_export = pd.DataFrame([profile_export])
 
