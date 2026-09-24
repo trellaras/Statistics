@@ -20,15 +20,16 @@ st.markdown("""
         background-color: #0f172a;
         color: #f8fafc;
     }
+    /* Βελτίωση εμφάνισης των Metric Cards */
+    div[data-testid="stMetric"] {
+        background-color: #1e293b;
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #334155;
+    }
     div[data-testid="stMetricValue"] {
         font-size: 1.7rem !important;
         color: #38bdf8 !important;
-    }
-    .main-header {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #38bdf8;
-        margin-bottom: 0.2rem;
     }
     </style>
 """, unsafe_allow_html=True)
