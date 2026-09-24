@@ -231,9 +231,9 @@ if 'raw_data' in st.session_state:
         planes_list.append({
             "Αεροσκάφος": clean_name,
             "Αγώνες": matches,
-            "Νίκες": wins,
+            "Wins": wins,
             "Win Rate (%)": win_rate,
-            "Θάνατοι": deaths,
+            "Deaths": deaths,
             "Deaths/Match": deaths_per_match,
             "MVPs": mvps,
             "Μέσο Σκορ": avg_score
@@ -275,10 +275,10 @@ if 'raw_data' in st.session_state:
         modes_list.append({
             "Game Mode": display_mode,
             "Αγώνες": m_matches,
-            "Νίκες": m_wins,
+            "Wins": m_wins,
             "Win Rate (%)": m_wr,
             "MVPs": m_mvps,
-            "Θάνατοι": m_deaths,
+            "Deaths": m_deaths,
             "Μέσο Σκορ": m_avg_score
         })
         
@@ -354,7 +354,7 @@ if 'raw_data' in st.session_state:
                     text="Win Rate (%)",
                     color="Win Rate (%)",
                     color_continuous_scale="Blues",
-                    hover_data=["Αγώνες", "Νίκες", "Θάνατοι", "MVPs"]
+                    hover_data=["Αγώνες", "Wins", "Deaths", "MVPs"]
                 )
                 fig1.update_traces(texttemplate='%{text}%', textposition='outside')
                 fig1.update_layout(template="plotly_dark", xaxis_tickangle=-45, height=450)
@@ -395,7 +395,7 @@ if 'raw_data' in st.session_state:
                     text="Win Rate (%)",
                     color="Win Rate (%)",
                     color_continuous_scale="Tealgrn",
-                    hover_data=["Αγώνες", "Νίκες", "MVPs"]
+                    hover_data=["Αγώνες", "Wins", "MVPs"]
                 )
                 fig_gm.update_traces(texttemplate='%{text}%', textposition='outside')
                 fig_gm.update_layout(template="plotly_dark", height=400)
