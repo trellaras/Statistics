@@ -230,7 +230,7 @@ if 'raw_data' in st.session_state:
 
         planes_list.append({
             "Aircraft": clean_name,
-            "Αγώνες": matches,
+            "Matches": matches,
             "Wins": wins,
             "Win Rate (%)": win_rate,
             "Deaths": deaths,
@@ -240,7 +240,7 @@ if 'raw_data' in st.session_state:
         })
 
     df_planes = pd.DataFrame(planes_list)
-    df_planes_sorted = df_planes.sort_values(by="Αγώνες", ascending=False) if not df_planes.empty else df_planes
+    df_planes_sorted = df_planes.sort_values(by="Matches", ascending=False) if not df_planes.empty else df_planes
 
     # Overall Ratios
     overall_win_rate = round((total_pvp_wins / total_pvp_matches) * 100, 1) if total_pvp_matches > 0 else 0.0
@@ -274,7 +274,7 @@ if 'raw_data' in st.session_state:
         
         modes_list.append({
             "Game Mode": display_mode,
-            "Αγώνες": m_matches,
+            "Matches": m_matches,
             "Wins": m_wins,
             "Win Rate (%)": m_wr,
             "MVPs": m_mvps,
@@ -282,7 +282,7 @@ if 'raw_data' in st.session_state:
             "Μέσο Σκορ": m_avg_score
         })
         
-    df_modes = pd.DataFrame(modes_list).sort_values(by="Αγώνες", ascending=False) if modes_list else pd.DataFrame()
+    df_modes = pd.DataFrame(modes_list).sort_values(by="Matches", ascending=False) if modes_list else pd.DataFrame()
 
     # ---------------------------------------------------------
     # C. Δημιουργία Dataframe για Excel Export
@@ -341,12 +341,12 @@ if 'raw_data' in st.session_state:
     # ---------------------------------------------------------
     with tab_planes:
         if not df_planes.empty:
-            df_filtered = df_planes[df_planes["Αγώνες"] >= 5].sort_values(by="Win Rate (%)", ascending=False)
+            df_filtered = df_planes[df_planes["Matches"] >= 5].sort_values(by="Win Rate (%)", ascending=False)
             
             sub1, sub2 = st.tabs(["📊 Γράφημα Win Rate", "📈 Μέσο Σκορ ανά Αγώνα"])
             
             with sub1:
-                st.subheader("Win Rate (%) ανά Aircraft (min. 5 αγώνες)")
+                st.subheader("Win Rate (%) ανά Aircraft (min. 5 Matches)")
                 fig1 = px.bar(
                     df_filtered,
                     x="Aircraft",
@@ -354,7 +354,7 @@ if 'raw_data' in st.session_state:
                     text="Win Rate (%)",
                     color="Win Rate (%)",
                     color_continuous_scale="Blues",
-                    hover_data=["Αγώνες", "Wins", "Deaths", "MVPs"]
+                    hover_data=["Matches", "Wins", "Deaths", "MVPs"]
                 )
                 fig1.update_traces(texttemplate='%{text}%', textposition='outside')
                 fig1.update_layout(template="plotly_dark", xaxis_tickangle=-45, height=450)
@@ -362,7 +362,7 @@ if 'raw_data' in st.session_state:
                 
             with sub2:
                 st.subheader("Μέσο Σκορ ανά Αγώνα")
-                df_score_sorted = df_planes[df_planes["Αγώνες"] >= 5].sort_values(by="Μέσο Σκορ", ascending=False)
+                df_score_sorted = df_planes[df_planes["Matches"] >= 5].sort_values(by="Μέσο Σκορ", ascending=False)
                 fig2 = px.bar(
                     df_score_sorted,
                     x="Aircraft",
@@ -370,7 +370,7 @@ if 'raw_data' in st.session_state:
                     text="Μέσο Σκορ",
                     color="Μέσο Σκορ",
                     color_continuous_scale="Viridis",
-                    hover_data=["Αγώνες", "MVPs"]
+                    hover_data=["Matches", "MVPs"]
                 )
                 fig2.update_traces(texttemplate='%{text}', textposition='outside')
                 fig2.update_layout(template="plotly_dark", xaxis_tickangle=-45, height=450)
@@ -395,7 +395,7 @@ if 'raw_data' in st.session_state:
                     text="Win Rate (%)",
                     color="Win Rate (%)",
                     color_continuous_scale="Tealgrn",
-                    hover_data=["Αγώνες", "Wins", "MVPs"]
+                    hover_data=["Matches", "Wins", "MVPs"]
                 )
                 fig_gm.update_traces(texttemplate='%{text}%', textposition='outside')
                 fig_gm.update_layout(template="plotly_dark", height=400)
@@ -406,7 +406,7 @@ if 'raw_data' in st.session_state:
                 fig_pie = px.pie(
                     df_modes,
                     names="Game Mode",
-                    values="Αγώνες",
+                    values="Matches",
                     hole=0.4,
                     color_discrete_sequence=px.colors.qualitative.Pastel
                 )
